@@ -38,8 +38,8 @@ private:
   void timer_callback() {
     cmd_vel_.angular.z = -direction_ / 2;
     vel_pub_->publish(cmd_vel_);
-    RCLCPP_INFO(this->get_logger(), "direction %f", 180 * direction_ / M_PI);
   };
+  
   void scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
     // compare function for max_element.
     auto cmp = [&msg](float a, float b) {
