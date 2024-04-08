@@ -31,7 +31,7 @@ public:
         std::bind(&Patrol::scan_callback, this, std::placeholders::_1),
         scan_sub_option_);
 
-    cmd_vel_.linear.x = -0.1;
+    cmd_vel_.linear.x = 0.1;
   }
 
 private:
@@ -42,29 +42,38 @@ private:
 
   void scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
     float front_range = msg->range_max;
+    float max_range = 0;
+    int max_range_index = 0;
+    RCLCPP_INFO(this->get_logger(), "front %f", msg->ranges[659]);
 
-    for (int i = 0; i < 140; i++) {
-        if (msg->ranges[290 + i] > msg->range_min &&
-            msg->ranges[290 + i] < front_range) {
-            front_range = msg->ranges[290 + i];
+    for (int i = 0; i < 165; i++) {
+        if (msg->ranges[i] > msg->range_min &&
+            msg->ranges[i] < front_range &&
+            i < 55) {
+            front_range = msg->ranges[i];
+        }
+        if (msg->ranges[659 - i] > msg->range_min &&
+            msg->ranges[659 - i] < front_range &&
+            i < 55) {
+            front_range = msg->ranges[659 - i];
+        }
+        if (msg->ranges[i] < msg->range_max &&
+            msg->ranges[i] > max_range) {
+            max_range = msg->ranges[i];
+            max_range_index = i;  
+        }
+        if (msg->ranges[659 - i] < msg->range_max &&
+            msg->ranges[659 - i] > max_range) {
+            max_range = msg->ranges[659 - i];
+            max_range_index = - i;
         }
     }
     if (front_range > 0.5) {
       direction_ = 0.0;
     } else {
-      // compare function for max_element.
-      auto cmp = [&msg](float a, float b) {
-        return ((b < msg->range_max) ? b : 0) > a;
-      };
-      // return an iterator to the largest ray within the range of
-      // the laser scan device
-      auto it_range_max =
-          std::max_element(msg->ranges.begin(), msg->ranges.end(), cmp);
-      int max_range_index = it_range_max - msg->ranges.begin();
-
       // convert the index of the largest ray in the scan array to its
       // corresponding angle (between -pi/2 and pi/2)
-      direction_ = ((max_range_index * 2 * M_PI) / 720 - M_PI) / 2;
+      direction_ = (max_range_index * M_PI / 2) / 165;
     }
   };
 
