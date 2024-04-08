@@ -1,11 +1,8 @@
 #include "geometry_msgs/msg/twist.hpp"
-#include "rclcpp/logging.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include <algorithm>
 #include <cmath>
 #include <functional>
-#include <limits>
 #include <memory>
 #include <string>
 
