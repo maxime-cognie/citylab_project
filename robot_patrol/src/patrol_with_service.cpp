@@ -1,7 +1,7 @@
-#include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "sensor_msgs/msg/laser_scan.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "robot_patrol/srv/get_direction.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
 #include <cmath>
 #include <functional>
 #include <future>
@@ -14,7 +14,7 @@ using GetDirection = robot_patrol::srv::GetDirection;
 
 class PatrolService : public rclcpp::Node {
 public:
-  PatrolService() : Node("robot_patrol_client"), direction_(0.0) {
+  PatrolService() : Node("robot_patrol_client") {
     timer_callback_group_ = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
 
@@ -23,10 +23,11 @@ public:
         rclcpp::CallbackGroupType::MutuallyExclusive);
 
     this->dir_client_ = this->create_client<GetDirection>("direction_service");
-    this->timer_ =
-        this->create_wall_timer(100ms, std::bind(&PatrolService::timer_callback, this),
-                                this->timer_callback_group_);
-    this->vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    this->timer_ = this->create_wall_timer(
+        100ms, std::bind(&PatrolService::timer_callback, this),
+        this->timer_callback_group_);
+    this->vel_pub_ =
+        this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
     this->scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
         "scan", 10,
@@ -36,7 +37,7 @@ public:
     this->cmd_vel_.linear.x = 0.1;
     this->dir_ang_vel_["left"] = 0.5;
     this->dir_ang_vel_["fornt"] = 0.0;
-    this->dir_ang_vel_["right"] = -0.5;    
+    this->dir_ang_vel_["right"] = -0.5;
   }
 
 private:
@@ -58,14 +59,14 @@ private:
 
     auto result_future = dir_client_->async_send_request(request);
 
-    if (result_future.wait_for(1s) == std::future_status::ready)
-    {
-        auto result = result_future.get();
-        this->cmd_vel_.angular.z = this->dir_ang_vel_[result->direction];
+    if (result_future.wait_for(1s) == std::future_status::ready) {
+      auto result = result_future.get();
+      this->cmd_vel_.angular.z = this->dir_ang_vel_[result->direction];
     } else {
-        RCLCPP_ERROR(this->get_logger(), "Failed to call service /direction_service");
+      RCLCPP_ERROR(this->get_logger(),
+                   "Failed to call service /direction_service");
     }
-        
+
     this->vel_pub_->publish(cmd_vel_);
   };
 
@@ -81,15 +82,15 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
   rclcpp::Client<GetDirection>::SharedPtr dir_client_;
 
-    sensor_msgs::msg::LaserScan last_laser_;
-    std::map<std::string, float> dir_ang_vel_;
-  double direction_;
+  sensor_msgs::msg::LaserScan last_laser_;
+  std::map<std::string, float> dir_ang_vel_;
   geometry_msgs::msg::Twist cmd_vel_;
 };
 
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
-  std::shared_ptr<PatrolService> robot_patrol = std::make_shared<PatrolService>();
+  std::shared_ptr<PatrolService> robot_patrol =
+      std::make_shared<PatrolService>();
 
   rclcpp::executors::MultiThreadedExecutor executors;
   executors.add_node(robot_patrol);
