@@ -24,15 +24,30 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/GetDirection.srv"
+  DEPENDENCIES sensor_msgs
+)
+
+rosidl_get_typesupport_target(cpp_typesupport_target
+  ${PROJECT_NAME} rosidl_typesupport_cpp
+)
+
 add_executable(robot_patrol_node src/patrol.cpp)
 ament_target_dependencies(robot_patrol_node rclcpp sensor_msgs geometry_msgs)
 
 add_executable(direction_service_node src/direction_service.cpp)
 ament_target_dependencies(direction_service_node rclcpp sensor_msgs direction_interface)
+target_link_libraries(direction_service_node "${cpp_typesupport_target}")
+
+add_executable(robot_patrol_service_node src/patrol_with_service.cpp)
+ament_target_dependencies(robot_patrol_service_node rclcpp sensor_msgs geometry_msgs)
+target_link_libraries(robot_patrol_service_node "${cpp_typesupport_target}")
 
 install(TARGETS
 	robot_patrol_node
 	direction_service_node
+	robot_patrol_service_node
 	DESTINATION lib/${PROJECT_NAME}
 )
 
