@@ -83,7 +83,7 @@ private:
     auto feedback = std::make_shared<GTP::Feedback>();
     auto result = std::make_shared<GTP::Result>();
     auto cmd_vel = geometry_msgs::msg::Twist();
-    cmd_vel.linear.x = 0.15;
+    cmd_vel.linear.x = 0.1;
 
     rclcpp::Rate loop_rate(20);
 
@@ -94,8 +94,7 @@ private:
         RCLCPP_INFO(this->get_logger(), "Goal canceled");
         return;
       }
-      cmd_vel.angular.z = direction() / M_PI;
-      RCLCPP_INFO(this->get_logger(), "dir %f", direction() / M_PI);
+      cmd_vel.angular.z = direction() / M_PI - this->current_pos_.theta / 180;
 
       if (dist_to_goal() < 0.15) {
         cmd_vel.linear.x = dist_to_goal() / 2;
@@ -116,13 +115,9 @@ private:
 
     while (std::abs(error_angle) > 0.5) {
       error_angle = desired_pos_.theta - current_pos_.theta;
-      RCLCPP_INFO(this->get_logger(),
-                  "desired pos : %f, current pos %f, error %f",
-                  desired_pos_.theta, current_pos_.theta, error_angle);
       feedback->current_pos = this->current_pos_;
       goal_handle->publish_feedback(feedback);
       cmd_vel.angular.z = (error_angle / 180) + sgn<float>(error_angle) * 0.2;
-      RCLCPP_INFO(this->get_logger(), "cmd vel %f, %f", error_angle / 180,  sgn<float>(error_angle) * 0.2);
       publisher_->publish(cmd_vel);
       loop_rate.sleep();
     }
