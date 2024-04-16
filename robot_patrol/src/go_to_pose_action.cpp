@@ -87,14 +87,14 @@ private:
 
     rclcpp::Rate loop_rate(20);
 
-    while (dist_to_goal() > 0.02) {
+    while (dist_to_goal() > 0.01) {
       if (goal_handle->is_canceling()) {
         result->status = false;
         goal_handle->canceled(result);
         RCLCPP_INFO(this->get_logger(), "Goal canceled");
         return;
       }
-      cmd_vel.angular.z = direction() / M_PI - this->current_pos_.theta / 180;
+      cmd_vel.angular.z = 3.0 * (direction() / M_PI - this->current_pos_.theta / 180);
 
       if (dist_to_goal() < 0.15) {
         cmd_vel.linear.x = dist_to_goal() / 2;
